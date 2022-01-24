@@ -5,18 +5,24 @@ from mesh_terrain import MeshTerrain
 from helper import hex_to_RGB
 
 # Global constants
-PLAYER_STEP_HIGHT = 2
+PLAYER_STEP_HEIGHT = 2
 PLAYER_HEIGHT = 1.86
 GRAVITY_FORCE = 9.8
-GENERATE_EVERY_TH = 2
-RESET_GEN_LENGTH = 4
+
+# Specific for the main file constants
+GENERATE_EVERY_TH = 2 # Higher = slower
+RESET_GEN_LENGTH = 4 
+
+# Colors
+SKY_BLUE = "#37b7da"
+
 
 
 
 app = Ursina()
 
 # Basic set up
-window.color = rgb(*hex_to_RGB("#37b7da"))
+window.color = rgb(*hex_to_RGB(SKY_BLUE))
 window.fullscreen = False 
 
 # Place objects, world
@@ -25,6 +31,7 @@ sky.color = window.color
 
 player = FirstPersonController()
 player.gravity = -0.0
+#player.height = PLAYER_HEIGHT
 player.cursor.visible = False
 
 terrain = MeshTerrain()
@@ -32,6 +39,10 @@ terrain = MeshTerrain()
 # Previous position
 pX = player.x
 pZ = player.z
+
+
+def input(key):
+    terrain.input(key)
 
 
 count_to_gen = 0
@@ -42,6 +53,9 @@ def update():
         # Generate terrain at the current swirl position
         count_to_gen = 0
         terrain.genTerrain()
+
+        # Highlight
+        terrain.update(player.position, camera)
     
     rs_stps = RESET_GEN_LENGTH
     # Change subset position, to generate around, based on object position
@@ -53,7 +67,7 @@ def update():
     target = player.y
     blockFound=False
     height = PLAYER_HEIGHT 
-    step = PLAYER_STEP_HIGHT
+    step = PLAYER_STEP_HEIGHT
     x = floor(player.x + 0.5)
     z = floor(player.z + 0.5)
     y = floor(player.y + 0.5)
