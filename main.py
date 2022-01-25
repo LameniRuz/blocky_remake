@@ -4,10 +4,14 @@ from ursina.prefabs.first_person_controller import FirstPersonController
 from mesh_terrain import MeshTerrain
 from helper import hex_to_RGB
 
+#NOTE messy code, refactor later
+
 # Global constants
 PLAYER_STEP_HEIGHT = 2
 PLAYER_HEIGHT = 1.86
 GRAVITY_FORCE = 9.8
+JUMP_HEIGHT = 10
+JUMP_LERP_SPEED = 8
 
 # Specific for the main file constants
 GENERATE_EVERY_TH = 2 # Higher = slower
@@ -15,7 +19,6 @@ RESET_GEN_LENGTH = 4
 
 # Colors
 SKY_BLUE = "#37b7da"
-
 
 
 
@@ -40,12 +43,22 @@ terrain = MeshTerrain()
 pX = player.x
 pZ = player.z
 
-
+grounded = False
+jumping = False
+jumping_target = 0
+jump_lerp_speed = JUMP_LERP_SPEED
 def input(key):
+    global jumping, grounded, jumping_target
+    if key == 'space' and grounded:
+        jumping = True
+        grounded = False
+        jumping_target = player.y + JUMP_HEIGHT + PLAYER_HEIGHT
+
+         
     terrain.input(key)
 
-
 count_to_gen = 0
+
 def update():
     global count_to_gen, pX, pZ
     count_to_gen += 1
@@ -55,7 +68,8 @@ def update():
         terrain.genTerrain()
 
         # Highlight
-        terrain.update(player.position, camera)
+        if count_to_gen % 2 == 0:
+            terrain.update(player.position, camera)
     
     rs_stps = RESET_GEN_LENGTH
     # Change subset position, to generate around, based on object position
@@ -71,21 +85,32 @@ def update():
     x = floor(player.x + 0.5)
     z = floor(player.z + 0.5)
     y = floor(player.y + 0.5)
-    # Step in pits if they shallow enough, Step over blocks * step
-    # without jump
-    for i in range(-step, step):
-        if terrain.td.get(f"x{x}y{y+i}z{z}") == "t":
-            target = y+i+height
-            blockFound = True
+
+    global jumping, grounded, jumping_target
+    if not jumping:
+        # Step in pits if they shallow enough, Step over blocks * step
+        for i in range(-step, step):
+            if terrain.td.get(f"x{x}y{y+i}z{z}") == "t":
+                target = y+i+height
+                blockFound = True
         
-    if blockFound == True:
-        # Step up or down :), slowly
-        player.y = lerp(player.y, target, 6 * time.dt)
-    # updateTerrain()
+        if blockFound == True:
+            # Step up or down :), slowly
+            player.y = lerp(player.y, target, 6 * time.dt)
+            if floor(player.y) == floor(target):
+                grounded = True
+                print(f"Grounded!")
+        else:
+            # Gravity fall :()
+            player.y -= GRAVITY_FORCE * time.dt
     else:
-        # Gravity fall :()
-        player.y -= GRAVITY_FORCE * time.dt
-        pass
+        #Start junky jumping
+        if floor(jumping_target - 0.5) == floor(player.y):
+            jumping = False
+        global jump_lerp_speed 
+        default_lerp = JUMP_LERP_SPEED
+        jump_lerp_speed = default_lerp if jump_lerp_speed < 0 else jump_lerp_speed - 0.01
+        player.y = lerp(player.y, jumping_target, jump_lerp_speed * time.dt)
 
 
 

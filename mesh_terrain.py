@@ -5,6 +5,7 @@ from perlin_controller import Perlin
 from helper import evenOrMinusOne
 from swirl_engine import SwirlEngine
 from mining_system import highlight_block, mine
+from config import SIX_AXIS as six_axis
 
 
 
@@ -42,7 +43,11 @@ class MeshTerrain:
 
     def input(self, key):
         if key=='left mouse up':
-            mine(self.td, self.vd, self.subsets, self.numVertices)#NOTE fix mining_system file, for example make it a class, then inherit it here
+            epi = mine(self.td, self.vd, self.subsets, self.numVertices)#NOTE fix mining_system file, for example make it a class, then inherit it here
+            if epi:
+                self.placeWalls(epi[0], epi[1])
+                self.subsets[epi[1]].model.generate()
+
 
     def update(self, pos, cam):
         #Highlight looked-at block
@@ -52,6 +57,9 @@ class MeshTerrain:
     def getBlock(self, x, y, z, subset=True):
         if subset: subset = self.currentSubset # Get default subset value, with workaround
 
+        # If on these coord is a terrain or a gap, return
+        if self.td.get(f"x{floor(x)}y{floor(y)}z{floor(z)}") != None: return
+
         # Extend or add to the vertices of our model
         model = self.subsets[subset].model
         
@@ -60,6 +68,11 @@ class MeshTerrain:
 
         # Record, what the terrain is exist on these coords
         self.td[f"x{floor(x)}y{floor(y)}z{floor(z)}"] = "t"
+        # Record what above thes terrain is a gap, if its empty for mining wall gen
+        upper_block =  self.td.get(f"x{floor(x)}y{floor(y+1)}z{floor(z)}")
+        if upper_block == None:
+            self.td[f"x{floor(x)}y{floor(y+1)}z{floor(z)}"] = "g"
+            
 
         # Record subset index and first vertex of this block
         # model.vertices - all vertices in the curent subset model,
@@ -98,8 +111,8 @@ class MeshTerrain:
                 y = floor(self.perlin.getHeight(x+k, z+j)) 
 
                 # If there is no block in this position, create it
-                if self.td.get(f"x{floor(x+k)}y{floor(y)}z{floor(z+j)}") == None:
-                    self.getBlock(x+k, y, z+j)
+                #if self.td.get(f"x{floor(x+k)}y{floor(y)}z{floor(z+j)}") == None:
+                self.getBlock(x+k, y, z+j)
 
         # Generate (Draw) current subset model whole
         self.subsets[self.currentSubset].model.generate()
@@ -111,4 +124,10 @@ class MeshTerrain:
 
         self.genEngine.move()
 
+
+    def placeWalls(self, gap_position, sub_num):
+        if gap_position == None: return
+        for i in range(0,6):
+            new_pos = gap_position + (0, 0 ,0) + six_axis[i] #FIXME
+            self.getBlock(new_pos.x, new_pos.y, new_pos.z, sub_num)
 

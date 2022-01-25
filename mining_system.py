@@ -1,7 +1,7 @@
 from ursina import Entity, floor, camera, color, Vec3
 
 from helper import hex_to_RGB
-from config import PLAYER_HEIGHT
+from config import PLAYER_HEIGHT, SIX_AXIS as six_axis
 
 HIGHLIGHT_RANGE=14
 
@@ -57,11 +57,20 @@ def mine(td, vd, subsets, numVertices):
     # subsets[sub_num].model.vertices = before_verts + after_verts
     # print(f"after deletion: {len(subsets[sub_num].model.vertices)}")
     # print(f"before - after  : {before - len(subsets[sub_num].model.vertices)}")
+        
+    # NOTE Spawn new blocks under the destroyed one 
     
-
-    
-
     subsets[sub_num].model.generate()
+
+    # g - gap in the terrrain, delete the vertices dictionary enty
+    td[f"x{floor(bte.x)}y{floor(bte.y)}z{floor(bte.z)}"] = "g"
+    vd[f"x{floor(bte.x)}y{floor(bte.y)}z{floor(bte.z)}"] = None
+
+    return (bte.position + Vec3(0,-0.5,0), sub_num)
+
+
+
+
 
 # Testing
 # def mine(td, vd, subsets, numVertices):
