@@ -15,3 +15,14 @@ SIX_AXIS = [
 (0,0,1),
 (0,0,-1)
 ]
+
+class BlockTypeNames:
+    def __init__(self):
+        self.grass = "grass"
+        self.soil = "soil"
+        self.stone = "stone"
+        self.ice = "ice"
+        self.snow= "snow"
+block_names = BlockTypeNames()
+
+

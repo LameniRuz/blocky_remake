@@ -1,5 +1,4 @@
 
-
 def evenOrMinusOne(num):
     if num % 2 == 0:
         return num
@@ -13,9 +12,18 @@ def hex_to_RGB(hex_string: str) -> tuple:
     return (r,  g,  b)
 
 
+class MemorisePositionHorisontal:
+    def __init__(self, x=0, z=0):
+        # Saved Positions
+        self.x = x
+        self.z = z
 
+    def get_abs_difference(self, x, z):
+        return (abs(self.x - x), abs(self.z - z))
 
-
+    def update_positions(self, x, z):
+        self.x = x
+        self.z = z
 
 
 

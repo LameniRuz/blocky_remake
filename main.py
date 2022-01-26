@@ -2,7 +2,10 @@ from ursina import *
 from ursina.prefabs.first_person_controller import FirstPersonController
 
 from mesh_terrain import MeshTerrain
-from helper import hex_to_RGB
+from helper import hex_to_RGB, MemorisePositionHorisontal
+from config import block_names 
+#from sound import StepSound, grass_audio
+from random import random
 
 #NOTE messy code, refactor later
 
@@ -15,18 +18,23 @@ JUMP_LERP_SPEED = 8
 
 # Specific for the main file constants
 GENERATE_EVERY_TH = 2 # Higher = slower
-RESET_GEN_LENGTH = 4 
+RESET_GEN_LENGTH = 2 
 
 # Colors
 SKY_BLUE = "#37b7da"
 
-
-
-app = Ursina()
+app = Ursina() #Before Sound!, update()
 
 # Basic set up
 window.color = rgb(*hex_to_RGB(SKY_BLUE))
 window.fullscreen = False 
+
+# Sound
+#step_sound_controll = StepSound()
+grass_audio = Audio('step.ogg',autoplay=False,loop=False)
+snow_audio = Audio('snowStep.mp3',autoplay=False,loop=False)
+sounds_for_blocks = { block_names.grass:  grass_audio, block_names.snow: snow_audio}
+pitches_min_dict = { block_names.grass:  0.7, block_names.snow: 0.3}
 
 # Place objects, world
 sky = Sky()
@@ -34,14 +42,15 @@ sky.color = window.color
 
 player = FirstPersonController()
 player.gravity = -0.0
-#player.height = PLAYER_HEIGHT
+player.height = PLAYER_HEIGHT
 player.cursor.visible = False
+
 
 terrain = MeshTerrain()
 
-# Previous position
-pX = player.x
-pZ = player.z
+# Previous position trackers for swirl gen reset and step_sound play
+pos_track_swirl_rst = MemorisePositionHorisontal(x=player.x, z=player.z)
+pos_track_step_sound = MemorisePositionHorisontal(x=player.x, z=player.z)
 
 grounded = False
 jumping = False
@@ -53,14 +62,13 @@ def input(key):
         jumping = True
         grounded = False
         jumping_target = player.y + JUMP_HEIGHT + PLAYER_HEIGHT
-
-         
     terrain.input(key)
 
 count_to_gen = 0
-
 def update():
-    global count_to_gen, pX, pZ
+
+    ### Generation ### 
+    global count_to_gen
     count_to_gen += 1
     if count_to_gen == GENERATE_EVERY_TH:
         # Generate terrain at the current swirl position
@@ -72,12 +80,13 @@ def update():
             terrain.update(player.position, camera)
     
     rs_stps = RESET_GEN_LENGTH
-    # Change subset position, to generate around, based on object position
-    if abs(player.x - pX) > rs_stps or abs(player.z - pZ) > rs_stps:
-        pX = player.x
-        pZ = player.z
-        terrain.genEngine.reset(pX, pZ)
+    # Change subset position, to generate around, based on the player position
+    (moved_on_x, moved_on_z) = pos_track_swirl_rst.get_abs_difference(player.x, player.z)
+    if moved_on_x > rs_stps or moved_on_z > rs_stps:
+        pos_track_swirl_rst.update_positions(player.x, player.z)
+        terrain.genEngine.reset(player.x, player.z)
 
+    ### Player Physics ### 
     target = player.y
     blockFound=False
     height = PLAYER_HEIGHT 
@@ -90,16 +99,29 @@ def update():
     if not jumping:
         # Step in pits if they shallow enough, Step over blocks * step
         for i in range(-step, step):
-            if terrain.td.get(f"x{x}y{y+i}z{z}") == "t":
+            block = terrain.td.get(f"x{floor(x)}y{floor(y+i)}z{floor(z)}")
+            # if Found a block under the player
+            if block and block != "g": #"t" now block type
                 target = y+i+height
                 blockFound = True
-        
+                # Make Step Sounds, for each 1 movement if player on the block (not in the air)
+                (fl_step_mv_on_x, fl_step_mv_on_z ) = pos_track_step_sound.get_abs_difference(x, z)
+                if fl_step_mv_on_x > 1 or fl_step_mv_on_z > 1: 
+                    pos_track_step_sound.update_positions(player.x, player.z)
+                    play_step_sound(block)
+                         
         if blockFound == True:
             # Step up or down :), slowly
-            player.y = lerp(player.y, target, 6 * time.dt)
-            if floor(player.y) == floor(target):
+            if round(player.y, 1) != round(target, 1):#NOTE edit this 
+                player.y = lerp(player.y, target, 6 * time.dt)
+            else: 
                 grounded = True
-                print(f"Grounded!")
+            if floor(player.y) == floor(target):#NOTE edit this
+                grounded = True
+            # print(f"player.y: {player.y}, target: {target}")
+            # print(f"round player.y: {round(player.y)}, round target: {round(target)}")
+            # print(f"floor player.y: {floor(player.y)}, round target: {floor(target)}")
+                # print(f"Grounded!")
         else:
             # Gravity fall :()
             player.y -= GRAVITY_FORCE * time.dt
@@ -114,6 +136,16 @@ def update():
 
 
 
+### Helper Functions ###
+def play_step_sound(block):
+    step_sound = sounds_for_blocks.get(block)
+    min_pitch = pitches_min_dict.get(block)
+    if not step_sound: step_sound = grass_audio 
+    if not min_pitch: min_pitch = 0.7
+    if step_sound.playing == False:
+        step_sound.pitch = random() + min_pitch
+        step_sound.play()
 
-terrain.genTerrain()#FIXME
+
+terrain.genTerrain()#Make terrain right under the player
 app.run()

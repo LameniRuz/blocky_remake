@@ -2,7 +2,7 @@ from ursina import Entity, floor, camera, color, Vec3
 from random import random
 
 from helper import hex_to_RGB
-from config import PLAYER_HEIGHT, SIX_AXIS as six_axis
+from config import PLAYER_HEIGHT, SIX_AXIS as six_axis, block_names
 
 HIGHLIGHT_RANGE=14
 
@@ -25,8 +25,10 @@ def highlight_block(pos, camera, td):
         bte.x = x
         bte.y = y + 0.5
         bte.z = z
-
-        if td.get(f"x{floor(x)}y{floor(y)}z{floor(z)}") != None:
+        
+        # If there is block ahead
+        block = td.get(f"x{floor(x)}y{floor(y)}z{floor(z)}")
+        if block and block != "g":
             bte.visible = True 
             break
         else:
@@ -71,24 +73,41 @@ def mine(td, vd, subsets, numVertices):
     return (bte.position + Vec3(0,-0.5,0), sub_num)
 
 
+
+
+
+# Testing
+# def mine(td, vd, subsets, numVertices):
+    # # Mine only if highlighted
+    # if not bte.visible: return
+
+    # wv = vd.get(f"x{floor(bte.x)}y{floor(bte.y)}z{floor(bte.z)}")
+    # hl_block_v = wv[1] # first vertice for this (highlighted) block
+    # sub_num = wv[0]
+
+    # #for i in range(hl_block_v + 1, hl_block_v + numVertices + 1):
+    # for i in range(hl_block_v, hl_block_v + numVertices + 1):
+       # #FIXME
+       # #NOTE
+       # #Maybe use del s[i:j] or del s[i:j:k] with the model.vertices 
+       # subsets[sub_num].model.vertices[i][1] += 999 #NOTE change this, how can we delete vrt from the array, fast
+       # print(subsets[sub_num].model.vertices[i]) #NOTE change this, how can we delete vrt from the array, fast
+       # print(i-hl_block_v)
+
+    # subsets[sub_num].model.generate()
+
 def block_type_change(block_y, surface=True, block_type="") -> str:
     if surface:
-        block_type = "grass"
+        block_type = block_names.grass
         # if high engough, paint snow
         if block_y > 2:
-            block_type = "snow"
+            block_type = block_names.snow 
 
     # random chance of the stone type if not surface
     else:
         if random() > 0.86:
-            block_type = "stone"
+            block_type = block_names.stone 
     return block_type
        
-
-
-
-
-
-
 
 
