@@ -16,6 +16,7 @@ GRAVITY_FORCE = 9.8
 JUMP_HEIGHT = 10
 JUMP_LERP_SPEED = 8
 
+
 # Specific for the main file constants
 GENERATE_EVERY_TH = 2 # Higher = slower
 RESET_GEN_LENGTH = 2 
@@ -40,13 +41,18 @@ pitches_min_dict = { block_names.grass:  0.7, block_names.snow: 0.3}
 sky = Sky()
 sky.color = window.color
 
-player = FirstPersonController()
+player = FirstPersonController(height=PLAYER_HEIGHT)#NOTE, remake FirstPersonController
 player.gravity = -0.0
 player.height = PLAYER_HEIGHT
-player.cursor.visible = False
+player.camera_pivot.y = PLAYER_HEIGHT #align camera with the player height
+#player.cursor.visible = False
 
 
 terrain = MeshTerrain()
+
+for _ in range(12):
+    terrain.genTerrain()#Make terrain right under the player
+
 
 # Previous position trackers for swirl gen reset and step_sound play
 pos_track_swirl_rst = MemorisePositionHorisontal(x=player.x, z=player.z)
@@ -63,9 +69,21 @@ def input(key):
         grounded = False
         jumping_target = player.y + JUMP_HEIGHT + PLAYER_HEIGHT
     terrain.input(key)
+    if key == 'right mouse up':
+        #print(f"mouse normal: {mouse.normal}")
+        pass
+
+
+
+# test4 = Entity(parent=camera.ui, model='quad', color=color.rgb(83, 212, 231), scale=0.1, rotation_z=45)#TEST
+#print(f"test4 blue position: {test4.position}")
+# print(f"camera privot position: {player.camera_pivot.position}")
+# player.camera_pivot.y = PLAYER_HEIGHT
+# print(f"camera privot position 2: {player.camera_pivot.position}")
 
 count_to_gen = 0
 def update():
+    #print(f"player camera thing poition {player.cursor.position}")
 
     ### Generation ### 
     global count_to_gen
@@ -99,7 +117,7 @@ def update():
     if not jumping:
         # Step in pits if they shallow enough, Step over blocks * step
         for i in range(-step, step):
-            block = terrain.td.get(f"x{floor(x)}y{floor(y+i)}z{floor(z)}")
+            block = terrain.td.get( (floor(x), floor(y+i), floor(z)) )
             # if Found a block under the player
             if block and block != "g": #"t" now block type
                 target = y+i+height
@@ -147,5 +165,4 @@ def play_step_sound(block):
         step_sound.play()
 
 
-terrain.genTerrain()#Make terrain right under the player
 app.run()

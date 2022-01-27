@@ -5,24 +5,28 @@ from terrain_change_system import block_type_change
 from perlin_controller import Perlin
 from helper import evenOrMinusOne
 from swirl_engine import SwirlEngine
-from terrain_change_system import highlight_block, mine
+from terrain_change_system import highlight_block, mine, hl_block
 from config import SIX_AXIS as six_axis, block_names
+from building_system import checkBuildPos, gapShell
 
+DEFAULT_BLOCK_TYPE = block_names.soil
 
-
-DEFAULT_BLOCK_TYPE = "soil"
-
+texture_map = { # <block_type_name>: (<uu>, <uv>), uu, uv - Texture atlas coord
+                block_names.soil:  (10, 7),
+                block_names.grass: (8, 7),
+                block_names.stone: (8, 5),
+                block_names.ice: (9,7),
+                block_names.snow: (8,6),
+}
 
 class MeshTerrain:
     def __init__(self):
-
         self.block = load_model('block.obj')
         self.textureAtlas = 'texture_atlas_3.png'
        
-
         self.subsets = []
-        self.totalSubs = 3 
-        self.subsetWidth = 4 # Even number 
+        self.totalSubs = 1024 
+        self.subsetWidth = 6 # Even number 
         # Subset generation engine
         self.genEngine = SwirlEngine(self.subsetWidth)
         self.currentSubset = 0
@@ -45,12 +49,25 @@ class MeshTerrain:
             e.texture_scale*=64/e.texture.width
             self.subsets.append(e)
 
-    def input(self, key):
-        if key=='left mouse up':
-            epi = mine(self.td, self.vd, self.subsets, self.numVertices)#NOTE fix mining_system file, for example make it a class, then inherit it here
+    def doMining(self):
+            epi = mine(self.td, self.vd, self.subsets, self.numVertices)#NOTE fix terrain_change_system file, for example make it a class, then inherit it here
             if epi:
                 self.placeWalls(epi[0], epi[1])
                 self.subsets[epi[1]].model.generate()
+
+    def doBuilding(self, block_type=DEFAULT_BLOCK_TYPE):#NOTE remove default block later
+        build_pos = checkBuildPos(self.td)
+        if build_pos:
+            (x,y,z) = build_pos
+            self.getBlock(x, y, z, block_type)
+            gapShell(x, y, z , self.td)
+
+
+    def input(self, key):
+        if key=='left mouse up':
+            self.doMining()
+        if key == 'right mouse up':
+            self.doBuilding()
 
 
     def update(self, pos, cam):
@@ -61,62 +78,40 @@ class MeshTerrain:
     def getBlock(self, x, y, z, subset=True, gap=True, block_type=DEFAULT_BLOCK_TYPE):
         if subset: subset = self.currentSubset # Get default subset value, with workaround
 
-        # If on these coord is a terrain or a gap, return
-        if self.td.get(f"x{floor(x)}y{floor(y)}z{floor(z)}") != None: return
+        block = self.td.get( (floor(x), floor(y), floor(z)) )#FIXME is it needed?
+        # If on these coord is a terrain, return
+        if block != 'g' and block != None: return
 
-        # Extend or add to the vertices of our model
-        model = self.subsets[subset].model
-        
-        #NOTE how do coordinates work in ursina???
-        model.vertices.extend([Vec3(x,y,z) + v for v in self.block.vertices])
+        model = self.subsets[subset].model# Extend or add to the vertices of our model
+        model.vertices.extend([Vec3(x,y,z) + v for v in self.block.vertices]) #NOTE how do coordinates work in ursina???
 
         # Record, what the terrain is exist on these coords
-        self.td[f"x{floor(x)}y{floor(y)}z{floor(z)}"] = block_type #changed "t" to a specific block type
-        # Record what above thes terrain is a gap, if its empty for mining wall gen
+        self.td[ (floor(x), floor(y), floor(z)) ] = block_type
+        # Record what above the terrain is a gap if its empty, for the mining and wall gen
         if gap:
-            upper_block =  self.td.get(f"x{floor(x)}y{floor(y+1)}z{floor(z)}")
+            upper_block =  self.td.get( (floor(x), floor(y+1), floor(z)) )
             if upper_block == None:
-                self.td[f"x{floor(x)}y{floor(y+1)}z{floor(z)}"] = "g"
+                self.td[ (floor(x), floor(y+1), floor(z)) ] = "g"
             
-
         # Record subset index and first vertex of this block
         # model.vertices - all vertices in the curent subset model,
         # one model consist from many blocks (their vertices)
         svob = ( subset, len(model.vertices) - (self.numVertices + 1) )
-        self.vd[f"x{floor(x)}y{floor(y)}z{floor(z)}"] = svob
+        self.vd[ (floor(x), floor(y), floor(z)) ] = svob
 
         # Add random tint color to the blocks
         c = random()-0.7
         model.colors.extend( (Vec4(1-c, 1-c, 1-c, 1),) *
                 self.numVertices)
         
+        uu, uv = texture_map.get(block_type, (None, None))# Get texture coords on the atlas
         
-        # Texture atlas coord for the grass
-        if block_type == block_names.grass:
-            uu = 8
-            uv = 7
-        elif block_type == block_names.soil:
-            uu = 10
-            uv = 7
-        elif block_type == block_names.stone:
-            uu = 8
-            uv = 5
-        elif block_type == block_names.ice:
-            uu = 9
-            uv = 7
-        elif block_type == block_names.snow:
-            uu = 8
-            uv = 6
-        else:
-            # If we dont know block type, make it grass
-            uu = 8
-            uv = 7
-
         # Make model show texture from the textureAtlas, according to uu,uv atlas coords
-        model.uvs.extend([Vec2(uu,uv) + u for u in self.block.uvs])
-    
+        if uu: model.uvs.extend([Vec2(uu,uv) + u for u in self.block.uvs]) #NOTE Add custom errors
+
+
     def genTerrain(self):
-        #Get curent position as we generate subsets around world
+        #Get curent position as we generate subsets around the world
         x = floor(self.genEngine.pos.x) # x
         z = floor(self.genEngine.pos.y) # z 
         y = 0
@@ -125,19 +120,18 @@ class MeshTerrain:
 
         for k in range(-d, d):
             for j in range(-d, d):
-                
                 # Change y coord with the perlin noise
                 y = floor(self.perlin.getHeight(x+k, z+j)) 
 
-                # If there is no block in this position, create it
-                #if self.td.get(f"x{floor(x+k)}y{floor(y)}z{floor(z+j)}") == None:
-                block_type = block_type_change(y, block_type=DEFAULT_BLOCK_TYPE) 
-                self.getBlock(x+k, y, z+j, block_type=block_type)
+                # If there is no block or a gap in this position, create it
+                if not self.td.get( (floor(x+k), floor(y), floor(z+j)) ):
+                    block_type = block_type_change(y, block_type=DEFAULT_BLOCK_TYPE) 
+                    self.getBlock(x+k, y, z+j, block_type=block_type)
 
         # Generate (Draw) current subset model whole
         self.subsets[self.currentSubset].model.generate()
        
-        # Current subsets hack
+        # Rotate current subset
         if self.currentSubset < self.totalSubs - 1:
             self.currentSubset += 1
         else: self.currentSubset = 0
@@ -149,6 +143,9 @@ class MeshTerrain:
     def placeWalls(self, gap_position, sub_num):
         if gap_position == None: return
         for i in range(0,6):
-            new_pos = gap_position + (0, 0 ,0) + six_axis[i] #FIXME
-            block_type = block_type_change(new_pos.y, surface=False, block_type=DEFAULT_BLOCK_TYPE) 
-            self.getBlock(new_pos.x, new_pos.y, new_pos.z, sub_num, False, block_type)
+            new_pos = gap_position + six_axis[i]
+            if not self.td.get( (new_pos.x, new_pos.y, new_pos.z) ):# place walls if there is no gap or block
+                block_type = block_type_change(new_pos.y, surface=False, block_type=DEFAULT_BLOCK_TYPE) 
+                self.getBlock(new_pos.x, new_pos.y, new_pos.z, sub_num, False, block_type)
+
+        
