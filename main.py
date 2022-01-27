@@ -18,8 +18,9 @@ JUMP_LERP_SPEED = 8
 
 
 # Specific for the main file constants
-GENERATE_EVERY_TH = 2 # Higher = slower
-RESET_GEN_LENGTH = 2 
+GENERATE_EVERY_TH = 2 # Higher = larger intervals between generations NOTE not less than 2 
+GENERATE_NUM_PER_TIME_RANGE = range(4)
+RESET_GEN_LENGTH = 2 # Every two blocks
 
 # Colors
 SKY_BLUE = "#37b7da"
@@ -74,7 +75,6 @@ def input(key):
         pass
 
 
-
 # test4 = Entity(parent=camera.ui, model='quad', color=color.rgb(83, 212, 231), scale=0.1, rotation_z=45)#TEST
 #print(f"test4 blue position: {test4.position}")
 # print(f"camera privot position: {player.camera_pivot.position}")
@@ -86,16 +86,18 @@ def update():
     #print(f"player camera thing poition {player.cursor.position}")
 
     ### Generation ### 
+    terrain.update(player.position, camera)
     global count_to_gen
     count_to_gen += 1
     if count_to_gen == GENERATE_EVERY_TH:
         # Generate terrain at the current swirl position
         count_to_gen = 0
-        terrain.genTerrain()
+        for _ in GENERATE_NUM_PER_TIME_RANGE: 
+            terrain.genTerrain()
 
         # Highlight
-        if count_to_gen % 2 == 0:
-            terrain.update(player.position, camera)
+        # if count_to_gen % 2 == 0:
+            # terrain.update(player.position, camera)
     
     rs_stps = RESET_GEN_LENGTH
     # Change subset position, to generate around, based on the player position

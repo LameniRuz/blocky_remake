@@ -19,6 +19,9 @@ texture_map = { # <block_type_name>: (<uu>, <uv>), uu, uv - Texture atlas coord
                 block_names.snow: (8,6),
 }
 
+
+BLISTER_MINE_COUNT = 4
+
 class MeshTerrain:
     def __init__(self):
         self.block = load_model('block.obj')
@@ -41,6 +44,9 @@ class MeshTerrain:
 
         # Vertex Dictionary for mining
         self.vd = {}
+
+        #FIXME testing blister is to fast
+        self.blister_tm = 0
 
         # Create entities for each subset
         for i in range(0, self.totalSubs):
@@ -70,9 +76,18 @@ class MeshTerrain:
             self.doBuilding()
 
 
+    
     def update(self, pos, cam):
         #Highlight looked-at block
         highlight_block(pos, cam, self.td)
+
+        # blister-mining, NOTE too fust, need to update subset model/ or spawn wall earlier
+        if hl_block.visible==True:
+            self.blister_tm +=1
+            if self.blister_tm == BLISTER_MINE_COUNT:
+                self.blister_tm = 0
+                if held_keys.get('left mouse') == 1:
+                    self.doMining()
 
 
     def getBlock(self, x, y, z, subset=True, gap=True, block_type=DEFAULT_BLOCK_TYPE):

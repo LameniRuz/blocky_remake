@@ -29,7 +29,6 @@ def highlight_block(pos, camera, td):
 
         #print(f"with_pos: {with_pos}")
 
-        
 
         x = round(with_pos.x)
         y = floor(with_pos.y)
@@ -76,7 +75,7 @@ def mine(td, vd, subsets, numVertices):
     # print(f"before - after  : {before - len(subsets[sub_num].model.vertices)}")
     # NOTE Spawn new blocks under the destroyed one 
     
-    subsets[sub_num].model.generate() # Regenerate updated model
+    #subsets[sub_num].model.generate() # Regenerate updated model FIXME
 
     # g - gap in the terrrain, delete the vertices dictionary enty
     td[ (floor(hl_block.x), floor(hl_block.y-0.5), floor(hl_block.z)) ] = "g" # -0.5, remove Offset of the hl obj
