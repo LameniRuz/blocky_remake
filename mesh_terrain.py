@@ -1,5 +1,7 @@
 from ursina import *
-from random import random, uniform
+from ursina import collider
+from ursina.shaders import *
+from random import random
 from terrain_change_system import block_type_change
 
 from perlin_controller import Perlin
@@ -9,7 +11,10 @@ from terrain_change_system import highlight_block, mine, hl_block
 from config import SIX_AXIS as six_axis, block_names
 from building_system import checkBuildPos, gapShell
 
+# Constants
 DEFAULT_BLOCK_TYPE = block_names.soil
+TERRAIN_SHADER=None
+BLISTER_MINE_COUNT = 2
 
 texture_map = { # <block_type_name>: (<uu>, <uv>), uu, uv - Texture atlas coord
                 block_names.soil:  (10, 7),
@@ -19,8 +24,6 @@ texture_map = { # <block_type_name>: (<uu>, <uv>), uu, uv - Texture atlas coord
                 block_names.snow: (8,6),
 }
 
-
-BLISTER_MINE_COUNT = 4
 
 class MeshTerrain:
     def __init__(self):
@@ -51,7 +54,9 @@ class MeshTerrain:
         # Create entities for each subset
         for i in range(0, self.totalSubs):
             e = Entity( model=Mesh(), 
-                        texture=self.textureAtlas )
+                        texture=self.textureAtlas,
+                        shader=TERRAIN_SHADER,
+                        )
             e.texture_scale*=64/e.texture.width
             self.subsets.append(e)
 
@@ -62,11 +67,12 @@ class MeshTerrain:
                 self.subsets[epi[1]].model.generate()
 
     def doBuilding(self, block_type=DEFAULT_BLOCK_TYPE):#NOTE remove default block later
-        build_pos = checkBuildPos(self.td)
+        build_pos = checkBuildPos(self.td, self.vd)
         if build_pos:
-            (x,y,z) = build_pos
-            self.getBlock(x, y, z, block_type)
+            (x,y,z, sub_pos) = build_pos
+            self.getBlock(x, y, z, subset=sub_pos,block_type=block_type)
             gapShell(x, y, z , self.td)
+            self.subsets[sub_pos].model.generate()
 
 
     def input(self, key):
@@ -81,7 +87,7 @@ class MeshTerrain:
         #Highlight looked-at block
         highlight_block(pos, cam, self.td)
 
-        # blister-mining, NOTE too fust, need to update subset model/ or spawn wall earlier
+        #blister-mining, NOTE too fust, need to update subset model/ or spawn wall earlier
         if hl_block.visible==True:
             self.blister_tm +=1
             if self.blister_tm == BLISTER_MINE_COUNT:
@@ -90,9 +96,7 @@ class MeshTerrain:
                     self.doMining()
 
 
-    def getBlock(self, x, y, z, subset=True, gap=True, block_type=DEFAULT_BLOCK_TYPE):
-        if subset: subset = self.currentSubset # Get default subset value, with workaround
-
+    def getBlock(self, x, y, z, subset, gap=True, block_type=DEFAULT_BLOCK_TYPE):
         block = self.td.get( (floor(x), floor(y), floor(z)) )#FIXME is it needed?
         # If on these coord is a terrain, return
         if block != 'g' and block != None: return
@@ -141,7 +145,7 @@ class MeshTerrain:
                 # If there is no block or a gap in this position, create it
                 if not self.td.get( (floor(x+k), floor(y), floor(z+j)) ):
                     block_type = block_type_change(y, block_type=DEFAULT_BLOCK_TYPE) 
-                    self.getBlock(x+k, y, z+j, block_type=block_type)
+                    self.getBlock(x+k, y, z+j, subset=self.currentSubset, block_type=block_type)
 
         # Generate (Draw) current subset model whole
         self.subsets[self.currentSubset].model.generate()
@@ -150,6 +154,7 @@ class MeshTerrain:
         if self.currentSubset < self.totalSubs - 1:
             self.currentSubset += 1
         else: self.currentSubset = 0
+
 
         self.genEngine.move()
 

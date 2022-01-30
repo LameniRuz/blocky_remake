@@ -12,30 +12,25 @@ hl_block.scale=1.001
 hl_block.visible = False
 
 
-white_sp = Entity( model='sphere', color=color.rgba(1,1,1, 1), scale=0.3, visible=True )#FIXME 
-red_sp = Entity( model='sphere', color=color.rgb(232, 47, 47), scale=0.3, visible=True )#FIXME 
+# white_sp = Entity( model='sphere', color=color.rgba(1,1,1, 1), scale=0.3, visible=True )#FIXME 
+# red_sp = Entity( model='sphere', color=color.rgb(232, 47, 47), scale=0.3, visible=True )#FIXME 
 
 
 def highlight_block(pos, camera, td):
     for i in range(1, HIGHLIGHT_RANGE+1):
         # with current position in (+) the camera forward direction i times
-        # print(f"camera.forward: {camera.forward}")
-        # print(f"camera.rotation: {camera.rotation}")
         with_pos = pos + (0, PLAYER_HEIGHT, 0) + camera.forward*(i*0.5)
         
-        #Pure posution (if its center in the block position), 
-        #highligh is initiated when the WHITE sphere center goes 'in' the block
-        white_sp.position = with_pos
-
-        #print(f"with_pos: {with_pos}")
-
+        #Pure position (if its center in the block position), 
+        # highlight is initiated when the WHITE sphere center goes 'in' the block
+        # white_sp.position = with_pos
 
         x = round(with_pos.x)
         y = floor(with_pos.y)
         z = round(with_pos.z)
             
         #After rounding, highligh center - RED
-        red_sp.position = (x,y,z)
+        #red_sp.position = (x,y,z)
         #print(f"x:{x}, y:{y}, z:{z}")
 
         hl_block.x = x

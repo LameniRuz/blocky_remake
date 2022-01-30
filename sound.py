@@ -1,42 +1,28 @@
-# from ursina import Audio
-# from math import floor 
-# from random import random
-""" DOESNT WORK, sound controll needs to be after game engine enitiation"""
-# from config import block_names
+from ursina import Audio
+from math import floor 
+from random import random as rd_random
+from config import block_names
+"""  Sound control needs to be imported after the game engine initiation"""
 
-# # Add new sounds settings here 
-# pitches_min_dict = { block_names.grass:  0.7, block_names.snow: 0.3}
+# Add new sounds settings here 
+grass_audio = Audio('step.ogg',autoplay=False,loop=False)
+snow_audio = Audio('snowStep.mp3',autoplay=False,loop=False)
 
-# class StepSound():
-    # def __init__(self):
-        # #self.sounds_d = sounds_dict
-        # self.sounds_for_blocks = sounds_for_blocks
-        # self.pitches_min_d = pitches_min_dict
+sounds_for_blocks = { block_names.grass:  grass_audio, block_names.snow: snow_audio}
+pitches_min_dict = { block_names.grass:  0.7, block_names.snow: 0.3}
 
+class StepSound():
+    def __init__(self):
+        self.sounds_for_blocks = sounds_for_blocks
+        self.pitches_min_dict = pitches_min_dict
 
-    # def try_play_steps(self, block_type):
-        # st_sound = self.sounds_for_blocks.get(block_type)
-        # if st_sound.playing == False:
-            # st_min_pitch = self.pitches_min_d[block_type]
-            # st_sound.pitch = round(random() + st_min_pitch)
-            # st_sound.play()
-        
+    def play_step_sound(self, block):
+        step_sound = self.sounds_for_blocks.get(block)
+        min_pitch = self.pitches_min_dict.get(block)
+        if not step_sound: step_sound = grass_audio
+        if not min_pitch: min_pitch = 0.7
+        if step_sound.playing == False:
+            step_sound.pitch = rd_random() + min_pitch
+            step_sound.play()
 
-
-    # def try_play(self, sound_key_name: str) -> int:
-        # st_sound = self.sounds_d.get(sound_key_name)
-        # st_min_pitch = self.pitches_min_d.get(sound_key_name)
-        # #if not st_sound or not st_min_pitch: return 0# Dictionary or sound_key_name is wrong NOTE Add custom error?
-        # # Play sound if it is not playing rn with a pitch
-        # if st_sound.playing == False:
-            # st_sound.pitch = round(random() + st_min_pitch)
-        #return 0
-
-
-
-
-
-
-
-
-
+step_sound = StepSound()
