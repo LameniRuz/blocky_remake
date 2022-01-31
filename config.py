@@ -2,8 +2,14 @@
 
 
 # Global constants
+
+#Color
+SKY_BLUE = "#37b7da"
+
+#Player
 PLAYER_STEP_HEIGHT = 2
 PLAYER_HEIGHT = 1.86
+#Physics
 GRAVITY_FORCE = 9.8
 
 
