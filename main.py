@@ -1,16 +1,17 @@
 from ursina import *
 from ursina.prefabs.first_person_controller import FirstPersonController
-from random import random as rd_random
 
 from mesh_terrain import MeshTerrain
 from helper import hex_to_RGB, MemorisePositionHorisontal
-from config import PLAYER_HEIGHT, SKY_BLUE
+from config import PLAYER_HEIGHT, SKY_BLUE, HIGHLIGHT_RANGE 
 
 app = Ursina() #Ursina initiation!, Before Sound!, update()
 from sound import step_sound  # Place after ursina initiation
 from mob_manager import *
 from character_controller import CharacterPhysicsController # put after ursina initiation
+
 #NOTE messy code, refactor later
+
 
 # Specific for the main file constants
 GENERATE_EVERY_TH = 4 # Higher = larger intervals between generations NOTE not higher than 2 
@@ -33,9 +34,12 @@ player.camera_pivot.y = PLAYER_HEIGHT #align camera with the player height
 #TEST physics controller
 player_physics = CharacterPhysicsController(player)
 
+#TEST smooth follow 
+# e = Entity(model='diamond', scale=0.5)
+# sf = e.add_script(SmoothFollow(target=player, offset=(2,3,2), speed=1, rotation_speed=1))
 
 terrain = MeshTerrain()
-for _ in range(12): terrain.genTerrain()# Make terrain right under the player
+for _ in range(15): terrain.genTerrain()# Make terrain right under the player
 
 def input(key):
     terrain.input(key)# Terrain change on keypress

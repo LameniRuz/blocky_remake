@@ -12,6 +12,8 @@ PLAYER_HEIGHT = 1.86
 #Physics
 GRAVITY_FORCE = 9.8
 
+#Player block Highlight
+HIGHLIGHT_RANGE=14
 
 SIX_AXIS = [
 (1,0,0),
