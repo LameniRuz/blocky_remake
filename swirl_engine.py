@@ -4,6 +4,7 @@ from ursina import Vec2
 class SwirlEngine:
     def __init__(self, subsetWidth):
         self.is_move = True 
+        self.max_iteration = 5
 
         self.subsetWidth = subsetWidth
             
@@ -40,8 +41,7 @@ class SwirlEngine:
         """Moves self.pos around its first setted, or reseted value,
            Used to get positions for subset/chunk generation
         """
-        if not self.is_move:
-            print("exiting swirl")
+        if not self.is_move or self.iteration > self.max_iteration:
             return
         
         if self.count < self.run:

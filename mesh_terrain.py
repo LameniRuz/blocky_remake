@@ -14,7 +14,7 @@ from building_system import checkBuildPos, gapShell
 # Constants
 DEFAULT_BLOCK_TYPE = block_names.soil
 TERRAIN_SHADER=None
-BLISTER_MINE_COUNT = 2
+BLISTER_MINE_COUNT = 1
 
 texture_map = { # <block_type_name>: (<uu>, <uv>), uu, uv - Texture atlas coord
                 block_names.soil:  (10, 7),
@@ -80,7 +80,6 @@ class MeshTerrain:
             self.doMining()
         if key == 'right mouse up':
             self.doBuilding()
-
 
     
     def update(self, pos, cam):

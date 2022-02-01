@@ -2,10 +2,8 @@ from ursina import Entity, collider, floor, camera, color, Vec3
 from random import random
 
 from helper import hex_to_RGB
-from config import PLAYER_HEIGHT, SIX_AXIS as six_axis, block_names
+from config import PLAYER_HEIGHT, SIX_AXIS as six_axis, block_names, HIGHLIGHT_RANGE
 
-
-HIGHLIGHT_RANGE=14
 
 hl_block = Entity( model='cube', color=color.rgba(1,1,1, 0.5), collider="box" )#FIXME 
 hl_block.scale=1.001
