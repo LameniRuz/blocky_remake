@@ -3,13 +3,15 @@ from config import SIX_AXIS as six_axis
 from terrain_change_system import hl_block
 
 def checkBuildPos(td, vd): 
-    if not hl_block.visible: return #NOTE Without this is fun, try to add toggle of this to a game mode
+    if not hl_block.visible: return #NOTE Without this is fun, try to add toggle of this to a game mode AIRBUILD
 
     # Adjust build site, since build-tool-entity (hl_block) offset.
     pos = hl_block.position + (0,-0.5,0) 
 
     wv = vd.get((pos.x, pos.y, pos.z))
-    sub_num = wv[0] #Get subset of the build base block
+    if wv: #TEST for AIRBUILD 
+        sub_num = wv[0] #Get subset of the build base block
+    else: sub_num = 0
 
     # Build direction change, with the hl_block/camera ray collision
     if mouse.normal:

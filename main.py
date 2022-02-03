@@ -1,5 +1,6 @@
 from ursina import *
 from ursina.prefabs.first_person_controller import FirstPersonController
+from first_person_ctr_custom import CustomFirstPersonController 
 
 from mesh_terrain import MeshTerrain
 from helper import hex_to_RGB, MemorisePositionHorisontal
@@ -25,11 +26,13 @@ window.fullscreen = False
 sky = Sky()
 sky.color = window.color
 
-player = FirstPersonController(height=PLAYER_HEIGHT)#NOTE, remake FirstPersonController
+#player = FirstPersonController(height=PLAYER_HEIGHT)#NOTE, remake FirstPersonController
+player = CustomFirstPersonController(height=PLAYER_HEIGHT)#NOTE, remake FirstPersonController
 player.gravity = -0.0
 player.height = PLAYER_HEIGHT
 player.camera_pivot.y = PLAYER_HEIGHT #align camera with the player height
 #player.cursor.visible = False
+
 
 #TEST physics controller
 player_physics = CharacterPhysicsController(player)
