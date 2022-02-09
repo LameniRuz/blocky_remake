@@ -1,8 +1,9 @@
 from ursina import *
+from collision_system import *
 
 
 class CustomFirstPersonController(Entity):
-    def __init__(self, **kwargs):
+    def __init__(self, terrain, **kwargs):
         self.cursor = Entity(parent=camera.ui, model='quad', color=color.pink, scale=.008, rotation_z=45)
         super().__init__()
         self.speed = 5
@@ -14,7 +15,8 @@ class CustomFirstPersonController(Entity):
         
         self.step_hight=2# TEST
         self.feet_ray = False
-        
+        self.terrain=terrain#TEST for collision system
+        self.direction = Vec3()
 
         camera.parent = self.camera_pivot
         camera.position = (0,0,0)
@@ -43,6 +45,8 @@ class CustomFirstPersonController(Entity):
 
 
     def update(self):
+        collide_wall(self, self.terrain.td)#TEST NOTE testing collide_wall
+
         self.rotation_y += mouse.velocity[0] * self.mouse_sensitivity[1]
 
         self.camera_pivot.rotation_x -= mouse.velocity[1] * self.mouse_sensitivity[0]
@@ -51,7 +55,10 @@ class CustomFirstPersonController(Entity):
         self.direction = Vec3(
             self.forward * (held_keys['w'] - held_keys['s'])
             + self.right * (held_keys['d'] - held_keys['a'])
-            ).normalized()
+            )
+        # print(f"self.direction: {self.direction}")
+        self.direction = self.direction.normalized()
+        # print(f"self.direction normalized: {self.direction}")
 
         #feet_ray = raycast(self.position+Vec3(0,0.5,0), self.direction, ignore=(self,), distance=self.distance, debug=True)
         head_ray = raycast(self.position+Vec3(0,self.height-.1,0), self.direction, ignore=(self,), distance=.5, debug=True)

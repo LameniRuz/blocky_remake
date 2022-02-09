@@ -26,16 +26,6 @@ window.fullscreen = False
 sky = Sky()
 sky.color = window.color
 
-#player = FirstPersonController(height=PLAYER_HEIGHT)#NOTE, remake FirstPersonController
-player = CustomFirstPersonController(height=PLAYER_HEIGHT)#NOTE, remake FirstPersonController
-player.gravity = -0.0
-player.height = PLAYER_HEIGHT
-player.camera_pivot.y = PLAYER_HEIGHT #align camera with the player height
-#player.cursor.visible = False
-
-
-#TEST physics controller
-player_physics = CharacterPhysicsController(player)
 
 #TEST smooth follow 
 # e = Entity(model='diamond', scale=0.5)
@@ -51,6 +41,20 @@ def input(key):
         ninja_physics_cotroller.initiate_jump()# Ninja also jumping!
         pass
 
+
+#player = FirstPersonController(height=PLAYER_HEIGHT)#NOTE, remake FirstPersonController
+player = CustomFirstPersonController(height=PLAYER_HEIGHT, terrain=terrain)#NOTE, remake FirstPersonController
+player.gravity = -0.0
+player.height = PLAYER_HEIGHT
+player.camera_pivot.y = PLAYER_HEIGHT #align camera with the player height
+#player.cursor.visible = False
+
+
+#TEST physics controller
+player_physics = CharacterPhysicsController(player)
+
+
+
 # Previous position trackers for swirl gen reset and step_sound play
 pos_track_swirl_rst = MemorisePositionHorisontal(x=player.x, z=player.z)
 count_to_gen = 0
@@ -59,7 +63,7 @@ def update():
     terrain.update(player.position, camera)#Highlight terrain for mining and building
 
     # Mob movement
-    mob_move_to(ninja_physics_cotroller, player.position, terrain_dict=terrain.td)
+    #mob_move_to(ninja_physics_cotroller, player.position, terrain_dict=terrain.td) #TEST
         
     ### Generation ### 
     global count_to_gen

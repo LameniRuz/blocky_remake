@@ -58,6 +58,12 @@ class CharacterPhysicsController:
         self.entity.y = lerp(self.entity.y, self.jumping_target, jump_lerp_speed * time.dt)
 
     def physics(self, terrain_dict):
+            #Collisions (raycast needs to be inplemented on a character)
+            #NOTE change this, afrer removing self.entity
+            # if hasattr(self.entity, "height"):
+                # collide_wall(self.entity, terrain_dict)
+
+
             target = self.entity.y
             self.blockFound=False
             x = floor(self.entity.x + 0.5)
