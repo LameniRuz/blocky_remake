@@ -6,7 +6,7 @@ def checkBuildPos(td, vd):
     if not hl_block.visible: return #NOTE Without this is fun, try to add toggle of this to a game mode AIRBUILD
 
     # Adjust build site, since build-tool-entity (hl_block) offset.
-    pos = hl_block.position + (0,-0.5,0) 
+    pos = hl_block.position
 
     wv = vd.get((pos.x, pos.y, pos.z))
     if wv: #TEST for AIRBUILD 

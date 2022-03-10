@@ -14,9 +14,10 @@ class CustomFirstPersonController(Entity):
         
         
         self.step_hight=2# TEST
-        self.feet_ray = False
+        self.feet_ray_hit = False
         self.terrain=terrain#TEST for collision system
         self.direction = Vec3()
+        self.debug = False
 
         camera.parent = self.camera_pivot
         camera.position = (0,0,0)
@@ -44,8 +45,11 @@ class CustomFirstPersonController(Entity):
                 self.y = ray.world_point.y
 
 
+    def horisontal_collisions(self):
+        pass
+
     def update(self):
-        collide_wall(self, self.terrain.td)#TEST NOTE testing collide_wall
+        collide_wall(self, self.terrain.td)#TEST NOTE testing collide_wall, 
 
         self.rotation_y += mouse.velocity[0] * self.mouse_sensitivity[1]
 
@@ -60,10 +64,11 @@ class CustomFirstPersonController(Entity):
         self.direction = self.direction.normalized()
         # print(f"self.direction normalized: {self.direction}")
 
+
         #feet_ray = raycast(self.position+Vec3(0,0.5,0), self.direction, ignore=(self,), distance=self.distance, debug=True)
-        head_ray = raycast(self.position+Vec3(0,self.height-.1,0), self.direction, ignore=(self,), distance=.5, debug=True)
+        head_ray = raycast(self.position+Vec3(0,self.height-.1,0), self.direction, ignore=(self,), distance=.5, debug=self.debug)
         #if not feet_ray.hit and not head_ray.hit:
-        if not head_ray.hit:
+        if not head_ray.hit and not self.feet_ray_hit:
             self.position += self.direction * self.speed * time.dt
 
 

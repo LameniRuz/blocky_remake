@@ -24,15 +24,15 @@ def highlight_block(pos, camera, td):
         # white_sp.position = with_pos
 
         x = round(with_pos.x)
-        y = floor(with_pos.y)
+        y = round(with_pos.y)#was floor
         z = round(with_pos.z)
             
         #After rounding, highligh center - RED
-        #red_sp.position = (x,y,z)
+        # red_sp.position = (x,y,z)
         #print(f"x:{x}, y:{y}, z:{z}")
 
         hl_block.x = x
-        hl_block.y = y + 0.5 #Offset hl obj
+        hl_block.y = y #Offset hl obj
         hl_block.z = z
         # If there is block ahead
         block = td.get( (x, y, z) )  
@@ -48,7 +48,7 @@ def highlight_block(pos, camera, td):
 def mine(td, vd, subsets, numVertices):
     if not hl_block.visible: return # Mine only if highlighted
 
-    wv = vd.get( (floor(hl_block.x), floor(hl_block.y-0.5), floor(hl_block.z)) )# -0.5, remove Offset of the hl obj
+    wv = vd.get( (floor(hl_block.x), floor(hl_block.y), floor(hl_block.z)) )
     if not wv: return # Mine only if there are vertices
     hl_block_v = wv[1] # first vertice for this (highlighted) block
     sub_num = wv[0]
@@ -71,9 +71,9 @@ def mine(td, vd, subsets, numVertices):
     #subsets[sub_num].model.generate() # Regenerate updated model FIXME
 
     # g - gap in the terrrain, delete the vertices dictionary enty
-    td[ (floor(hl_block.x), floor(hl_block.y-0.5), floor(hl_block.z)) ] = "g" # -0.5, remove Offset of the hl obj
-    vd[ (floor(hl_block.x), floor(hl_block.y-0.5), floor(hl_block.z)) ] = None
-    return (hl_block.position + (0,-0.5,0), sub_num)
+    td[ (floor(hl_block.x), floor(hl_block.y), floor(hl_block.z)) ] = "g" 
+    vd[ (floor(hl_block.x), floor(hl_block.y), floor(hl_block.z)) ] = None
+    return (hl_block.position, sub_num)
 
 
 def block_type_change(block_y, surface=True, block_type="") -> str:

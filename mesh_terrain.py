@@ -101,7 +101,8 @@ class MeshTerrain:
         if block != 'g' and block != None: return
 
         model = self.subsets[subset].model# Extend or add to the vertices of our model
-        model.vertices.extend([Vec3(x,y,z) + v for v in self.block.vertices]) #NOTE how do coordinates work in ursina???
+        # y-0.5  to offset model center, example: block (x=1,y=1,z=1), vertices, now create the cube, with the center at (x=1,y=1,z=1)
+        model.vertices.extend([Vec3(x,y-0.5,z) + v for v in self.block.vertices]) #NOTE how do coordinates work in ursina???
 
         # Record, what the terrain is exist on these coords
         self.td[ (floor(x), floor(y), floor(z)) ] = block_type

@@ -9,6 +9,7 @@ ninja.texture = 'panda_tex'
 ninja.position = Vec3(0, 20, 0)#Ninja falls if spawned underground
 ninja.turnSpeed = 1.1
 ninja.speed = 1
+ninja.height = 1
 
 
 ninja_physics_cotroller = CharacterPhysicsController(ninja, height=1, step_height=1, step_sound=False)

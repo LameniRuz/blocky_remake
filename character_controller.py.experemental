@@ -19,10 +19,10 @@ JUMP_LERP_SPEED = 8
 
 #TEST entity
 TESTING_VISIBLE=False
-# feetHitpos = Entity(model='cube', color=color.rgba(0.01,1.00,0.01,0.85), scale=1.001, block_pos=Vec3(0,0,0), collider=None    , visible=TESTING_VISIBLE)
-# poss_st_onENT = Entity(model='cube', color=color.rgba(0.20,0.40,0.01,0.85), scale=1.001, block_pos=Vec3(0,0,0), collider=None , visible=TESTING_VISIBLE)
-# poss_st_onENT2 = Entity(model='cube', color=color.rgba(0.30,0.30,0.11,0.85), scale=1.001, block_pos=Vec3(0,0,0), collider=None, visible=TESTING_VISIBLE)
-# poss_st_onENT3 = Entity(model='cube', color=color.rgba(0.40,0.10,0.14,0.85), scale=1.001, block_pos=Vec3(0,0,0), collider=None, visible=TESTING_VISIBLE)
+feetHitpos = Entity(model='cube', color=color.rgba(0.01,1.00,0.01,0.85), scale=1.001, block_pos=Vec3(0,0,0), collider=None    , visible=TESTING_VISIBLE)
+poss_st_onENT = Entity(model='cube', color=color.rgba(0.20,0.40,0.01,0.85), scale=1.001, block_pos=Vec3(0,0,0), collider=None , visible=TESTING_VISIBLE)
+poss_st_onENT2 = Entity(model='cube', color=color.rgba(0.30,0.30,0.11,0.85), scale=1.001, block_pos=Vec3(0,0,0), collider=None, visible=TESTING_VISIBLE)
+poss_st_onENT3 = Entity(model='cube', color=color.rgba(0.40,0.10,0.14,0.85), scale=1.001, block_pos=Vec3(0,0,0), collider=None, visible=TESTING_VISIBLE)
 
 class CharacterPhysicsController:
     def __init__(self, entity, height=PLAYER_HEIGHT, step_sound=True, **kwargs):
@@ -33,8 +33,6 @@ class CharacterPhysicsController:
         self.blockFound = False
         self.height = height 
         self.step = PLAYER_STEP_HEIGHT
-        self.step = PLAYER_STEP_HEIGHT#TESTING
-        self.step = 1
         self.gravity_force = GRAVITY_FORCE#Change to fit player and mobs 
 
 
@@ -70,12 +68,69 @@ class CharacterPhysicsController:
 
     def physics(self, terrain_dict):
             TEST_Start_step = False
+
+            #NOTE make step hight always 1?, + fix diagonal ghosting + place block under 
             feet_hit_direction = self.entity.direction
             feet_ray = raycast(self.entity.position+(0,0,0), feet_hit_direction, ignore=(self.entity,), distance=.3, debug=True)
+            feet_ray2 = raycast(self.entity.position+(0,1,0), feet_hit_direction, ignore=(self.entity,), distance=.3, debug=True)
             self.entity.feet_ray_hit = False#rename
-            if feet_ray.hit:
-                self.entity.feet_ray_hit = True
+            if feet_ray.hit or feet_ray2.hit:
+                (x,y,z)=(round(coord) for coord in (self.entity.position+self.entity.direction)) 
+                print("Hit!")
+                #print(f"x:{x} y:{y} z:{z}")
+                feetHitpos.position=(x,y,z)
 
+                step_block = None
+                for step in range(self.step, 0, -1):
+                    possible_new_higher_pos = (x, y+step ,z)
+
+                    step_block = terrain_dict.get( (x, y+step-1,z))#-1 block to stand on, under the step position
+                    print(f"step_block {step_block}")
+                    print(f"step_block y pos {possible_new_higher_pos[1]}")
+                    print(f"spep  {step}")
+                    #If there is a block to stand on
+                    poss_st_onENT.position = possible_new_higher_pos
+                    poss_st_onENT2.position = (x, y+2, z) 
+                    if step_block and step_block != 'g':
+                        print("there is a block to stand on")
+                        free_space_above = True 
+                        #And there is a free space above it (step_block) to stand on
+                        for up_i in range(0, round(self.entity.height)+1):
+                            x_above, y_above, z_above =  possible_new_higher_pos
+                            block_above = terrain_dict.get( (x_above, y_above+up_i, z_above) )
+                            if block_above and block_above != 'g':
+                                poss_st_onENT3.position = (x_above, y_above+up_i, z_above)
+                                print(f"block above {block_above} at: {y_above+up_i}")
+                                free_space_above = False 
+
+                        if free_space_above: 
+                            print("free space above, step up")
+                            #Step up, NOTE change for the proper lerp function
+                            #self.entity.y = possible_new_higher_pos[1]#y
+                            TEST_Start_step = True
+                            break
+                        else:
+                            TEST_Start_step = False
+                            #Cant step up stop the entity 
+                            self.entity.feet_ray_hit = True
+
+
+
+
+                    #block = terrain_dict.get( (x, y+i, z) )
+
+                    #print(f"block: {block}")
+
+
+                #print(f"step_on_pos: {step_on_pos}")
+            else:
+                #print("not hit")
+                pass
+            # print(f"y_r: {round(self.entity.y)} y: {self.entity.y}")
+            #Collisions (raycast needs to be implemented on a character)
+            #NOTE change this, afrer removing self.entity
+            # if hasattr(self.entity, "height"):
+                # collide_wall(self.entity, terrain_dict)
 
 
             target = self.entity.y
@@ -87,12 +142,15 @@ class CharacterPhysicsController:
 
             if not self.jumping:
                 # Step in pits if they shallow enough, Step over blocks * step
+                #for i in range(-self.step, self.step):
+                #for i in range(-1, 0):
                 for i in range(-1, self.step):#without this cant step up on new blocks under
+                #for i in range(-2, self.step):
                     block = terrain_dict.get( (x, y+i, z) )
                     # if Found a block under the self.entity
                     if block and block != "g": #"t" now block type
-                        target = round(y+i+self.height+1)
-                        #print(f"target: {target}")
+                        target = round(y+i+self.height)
+                        # print(f"target: {target}")
                         self.blockFound = True
                         if self.step_sound:
                             # Make Step Sounds, for each 1 movement if self.entity on the block (not in the air)
@@ -104,6 +162,8 @@ class CharacterPhysicsController:
                 if self.blockFound == True:
                     self.grounded = True#jump, test,remove
                     # Step up or down :), slowly
+                    #if round(self.entity.y) != round(target):#NOTE edit this 
+                    #if round(self.entity.y, 1) != round(target, 1):#NOTE edit this 
                     if self.entity.y != target:#NOTE edit this 
                         if TEST_Start_step:
                             self.entity.y = target
