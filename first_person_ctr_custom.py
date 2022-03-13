@@ -49,7 +49,6 @@ class CustomFirstPersonController(Entity):
         pass
 
     def update(self):
-        collide_wall(self, self.terrain.td)#TEST NOTE testing collide_wall, 
 
         self.rotation_y += mouse.velocity[0] * self.mouse_sensitivity[1]
 
@@ -64,11 +63,14 @@ class CustomFirstPersonController(Entity):
         self.direction = self.direction.normalized()
         # print(f"self.direction normalized: {self.direction}")
 
+        collide_wall(self, self.terrain.td)#TEST NOTE testing collide_wall, before rays, rays can be put inside this 
 
         #feet_ray = raycast(self.position+Vec3(0,0.5,0), self.direction, ignore=(self,), distance=self.distance, debug=True)
         head_ray = raycast(self.position+Vec3(0,self.height-.1,0), self.direction, ignore=(self,), distance=.5, debug=self.debug)
         #if not feet_ray.hit and not head_ray.hit:
-        if not head_ray.hit and not self.feet_ray_hit:
+        #body_box2 = boxcast(self.position+Vec3(1,1,1), self.up, distance=self.height-0.5, thickness=(0.2,0.2), ignore=(self,), debug=True)
+        body_box = boxcast(self.position+Vec3(0,0.1,0), self.direction, distance=.4, thickness=(0.2,self.height-.1), ignore=(self,), debug=True)#change first thickness param to change width of the box
+        if not head_ray.hit and not self.feet_ray_hit and not body_box.hit:
             self.position += self.direction * self.speed * time.dt
 
 

@@ -20,6 +20,14 @@ mypos = Entity(model='cube', color=color.rgba(0.8,0.4,0,0.85), scale=1.001, bloc
 # red_sp = Entity( model='sphere', color=color.rgba(0.9, .18, .18, 0.5), scale=0.8, visible=True ) 
 # red_sp_3 = Entity( model='sphere', color=color.rgba(0.9, .19, .19, 0.5), scale=0.8, visible=True ) 
 
+
+
+
+bte_head = Entity(model='cube', color=color.rgba(0.67, 0.00, 1.00, 0.65), block_pos=Vec3(10,6,0))
+bte_head.scale=1.0009
+bte_head.visible = True 
+bte_head.collider = 'box'
+
 coll_list_2d = []
 for i in range(8):#TESTING
     coll_list_2d.append([])
@@ -54,7 +62,11 @@ def collide_wall(creature, terrain_dict):
 
     #Test entities
     mypos.position = creature_pos_r #TEST
+
     block_on_head_y = round(creature.height)
+    
+    #spawn collider above the head
+    spawn_collider_on_blc(creature_pos_r + (0, block_on_head_y+1-.1, 0), terrain_dict, coll_block=bte_head)
 
     for idx, directiton in enumerate(COLLIDER_PLACEMENT_DIRECTIONS):
          blc_pos_check = creature_pos_r + directiton
@@ -79,6 +91,7 @@ def spawn_collider_on_blc(block_pos, terrain_dict, coll_block):
     else:
         coll_block.collider = None
         coll_block.visible = False#for the TEST
+
 
 
 

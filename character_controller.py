@@ -62,25 +62,24 @@ class CharacterPhysicsController:
         self.jumping_target = self.entity.y + self.jump_height + PLAYER_HEIGHT
     
     def jump_flight(self): #junky jumping
-        if floor(self.jumping_target) <= floor(self.entity.y):
+        head_up_ray = raycast(self.entity.position+(0,self.height+0.3,0), self.entity.up, ignore=(self.entity,))#stop jump if we hit the celling, BUG, wont works
+        if floor(self.jumping_target) <= floor(self.entity.y) or head_up_ray.hit:
             self.jumping = False
-        default_lerp = JUMP_LERP_SPEED
-        jump_lerp_speed = default_lerp if self.jump_lerp_speed < 0 else self.jump_lerp_speed - 0.01 #Jump slowdown 
-        self.entity.y = lerp(self.entity.y, self.jumping_target, jump_lerp_speed * time.dt)
+            self.grounded = False
+        else:
+            default_lerp = JUMP_LERP_SPEED
+            jump_lerp_speed = default_lerp if self.jump_lerp_speed < 0 else self.jump_lerp_speed - 0.01 #Jump slowdown 
+            self.entity.y = lerp(self.entity.y, self.jumping_target, jump_lerp_speed * time.dt)
 
     def physics(self, terrain_dict):
-            TEST_Start_step = False
-            feet_hit_direction = self.entity.direction
-            feet_ray = raycast(self.entity.position+(0,0,0), feet_hit_direction, ignore=(self.entity,), distance=.3, debug=True)
-            self.entity.feet_ray_hit = False#rename
-            if feet_ray.hit:
-                self.entity.feet_ray_hit = True
-
-
+            # feet_hit_direction = self.entity.direction
+            # feet_ray = raycast(self.entity.position+(0,0,0), feet_hit_direction, ignore=(self.entity,), distance=.3, debug=True)
+            # self.entity.feet_ray_hit = False#rename
+            # if feet_ray.hit:
+                # self.entity.feet_ray_hit = True
 
             target = self.entity.y
             self.blockFound=False
-            #x = floor(self.entity.x + 0.5)
             x = round(self.entity.x)
             z = round(self.entity.z)
             y = round(self.entity.y)
@@ -103,37 +102,8 @@ class CharacterPhysicsController:
                                  
                 if self.blockFound == True:
                     self.grounded = True#jump, test,remove
-                    # Step up or down :), slowly
-                    if self.entity.y != target:#NOTE edit this 
-                        if TEST_Start_step:
-                            self.entity.y = target
-                        #self.entity.y = lerp(self.entity.y, target, 6 * time.dt)   #Lerp is bad for this, its goes slowly the less difference there is between target and y
-                            
-                        current_y = self.entity.y
-                        to_target = target
-                        step_duration = 0.5
-                        # print(f"target: {target}")
-                        # print(f"y: {self.entity.y}")
-                        #print(f"time.dt: {time.dt}")
-                        #self.entity.animate_y(target, step_duration, resolution=int(1//time.dt), curve=curve.out_expo)
-                        #invoke(self.entity.y_animator.pause(), delay=self.fall_after)
-
-                        # print(f"After lerp - y_r: {round(self.entity.y)} y: {self.entity.y}")
-
-                    #elif self.entity
-                    else: 
-                        #self.entity.y_animator.pause()#stop step up/down
-                        self.grounded = True
-                        #place directly above the ground
-                        #self.entity.y = round(self.entity.y)
-                        print("FIRST G TRUE")
-                    if floor(self.entity.y) == floor(target):#NOTE edit this
-                        #self.grounded = True
-                        #print("SECOND G TRUE")
-                        pass
                 else:
                     # Gravity fall :()
-                    # print("fall")
                     self.entity.y -= self.gravity_force * time.dt
             else:
                 self.jump_flight()
